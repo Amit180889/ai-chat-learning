@@ -1,0 +1,45 @@
+package com.amit.ai.chat.service;
+
+import com.amit.ai.chat.model.ChatRequest;
+import com.amit.ai.chat.model.ChatResponse;
+import dev.langchain4j.data.message.ChatMessage;
+import dev.langchain4j.data.message.UserMessage;
+import dev.langchain4j.model.chat.request.DefaultChatRequestParameters;
+import dev.langchain4j.model.googleai.GoogleAiGeminiChatModel;
+import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
+
+import java.util.List;
+
+@Service
+@RequiredArgsConstructor
+public class ChatService {
+
+    private final GoogleAiGeminiChatModel chatModel;
+
+    @Value("${langchain4j.google-ai-gemini.chat-model.model-name}")
+    private String modelName;
+
+    public ChatResponse chat(ChatRequest chatRequest) {
+
+        UserMessage userMessage = UserMessage.userMessage(chatRequest.message());
+
+        List<ChatMessage> messages = List.of(userMessage);
+
+        dev.langchain4j.model.chat.request.ChatRequest request =
+                dev.langchain4j.model.chat.request.ChatRequest.builder()
+                        .messages(messages)
+                        .parameters(
+                                DefaultChatRequestParameters.builder()
+                                        .modelName(modelName)
+                                        .build()
+                        )
+                        .build();
+
+        dev.langchain4j.model.chat.response.ChatResponse response =
+                chatModel.doChat(request);
+
+        return new ChatResponse(response.aiMessage().text());
+    }
+}

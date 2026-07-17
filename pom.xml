@@ -51,7 +51,44 @@
 			<artifactId>spring-boot-starter-test</artifactId>
 			<scope>test</scope>
 		</dependency>
+		<!-- LangChain4j Spring Boot Starter for Google AI Gemini -->
+		<dependency>
+			<groupId>dev.langchain4j</groupId>
+			<artifactId>langchain4j-google-ai-gemini-spring-boot-starter</artifactId>
+			 <version>1.17.2-beta27</version>
+		</dependency>
+		<!-- LangChain4j Spring Boot Starter for AI
+			 Provide Spring Boot integration.
+
+			Things like:
+			@AiService
+			Auto Configuration
+			Bean creation
+			Dependency Injection
+			Prompt Templates
+			Memory integration
+			Tool support
+		 -->
+		<dependency>
+			<groupId>dev.langchain4j</groupId>
+			<artifactId>langchain4j-spring-boot-starter</artifactId>
+			 <version>1.17.2-beta27</version>
+		</dependency>
 	</dependencies>
+
+	<!--<dependencyManagement>
+		<dependencies>
+
+			<dependency>
+				<groupId>dev.langchain4j</groupId>
+				<artifactId>langchain4j-bom</artifactId>
+				<version>1.17.2</version>
+				<type>pom</type>
+				<scope>import</scope>
+			</dependency>
+
+		</dependencies>
+	</dependencyManagement>-->
 
 	<build>
 		<plugins>
