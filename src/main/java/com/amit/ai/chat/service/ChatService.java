@@ -24,11 +24,16 @@ public class ChatService {
 
     @Value("${langchain4j.google-ai-gemini.chat-model.model-name}")
     private String modelName;
-n    public ChatResponse chat(ChatRequest chatRequest) {
-n        logger.info("Calling chat model (model={}) with message length={}", modelName, chatRequest.message() == null ? 0 : chatRequest.message().length());
-n        UserMessage userMessage = UserMessage.userMessage(chatRequest.message());
-n        List<ChatMessage> messages = List.of(userMessage);
-n        dev.langchain4j.model.chat.request.ChatRequest request =
+
+    public ChatResponse chat(ChatRequest chatRequest) {
+
+        logger.info("Calling chat model (model={}) with message length={}", modelName, chatRequest.message() == null ? 0 : chatRequest.message().length());
+
+        UserMessage userMessage = UserMessage.userMessage(chatRequest.message());
+
+        List<ChatMessage> messages = List.of(userMessage);
+
+        dev.langchain4j.model.chat.request.ChatRequest request =
                 dev.langchain4j.model.chat.request.ChatRequest.builder()
                         .messages(messages)
                         .parameters(
@@ -37,9 +42,11 @@ public class ChatService {
                                         .build()
                         )
                         .build();
-n        dev.langchain4j.model.chat.response.ChatResponse response =
+
+        dev.langchain4j.model.chat.response.ChatResponse response =
                 chatModel.doChat(request);
-n        String text = response.aiMessage().text();
+
+        String text = response.aiMessage().text();
         logger.debug("Received response of length={}", text == null ? 0 : text.length());
         return new ChatResponse(text);
     }
