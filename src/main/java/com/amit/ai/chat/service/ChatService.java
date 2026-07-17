@@ -7,6 +7,8 @@ import dev.langchain4j.data.message.UserMessage;
 import dev.langchain4j.model.chat.request.DefaultChatRequestParameters;
 import dev.langchain4j.model.googleai.GoogleAiGeminiChatModel;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -16,18 +18,17 @@ import java.util.List;
 @RequiredArgsConstructor
 public class ChatService {
 
+    private static final Logger logger = LoggerFactory.getLogger(ChatService.class);
+
     private final GoogleAiGeminiChatModel chatModel;
 
     @Value("${langchain4j.google-ai-gemini.chat-model.model-name}")
     private String modelName;
-
-    public ChatResponse chat(ChatRequest chatRequest) {
-
-        UserMessage userMessage = UserMessage.userMessage(chatRequest.message());
-
-        List<ChatMessage> messages = List.of(userMessage);
-
-        dev.langchain4j.model.chat.request.ChatRequest request =
+n    public ChatResponse chat(ChatRequest chatRequest) {
+n        logger.info("Calling chat model (model={}) with message length={}", modelName, chatRequest.message() == null ? 0 : chatRequest.message().length());
+n        UserMessage userMessage = UserMessage.userMessage(chatRequest.message());
+n        List<ChatMessage> messages = List.of(userMessage);
+n        dev.langchain4j.model.chat.request.ChatRequest request =
                 dev.langchain4j.model.chat.request.ChatRequest.builder()
                         .messages(messages)
                         .parameters(
@@ -36,10 +37,10 @@ public class ChatService {
                                         .build()
                         )
                         .build();
-
-        dev.langchain4j.model.chat.response.ChatResponse response =
+n        dev.langchain4j.model.chat.response.ChatResponse response =
                 chatModel.doChat(request);
-
-        return new ChatResponse(response.aiMessage().text());
+n        String text = response.aiMessage().text();
+        logger.debug("Received response of length={}", text == null ? 0 : text.length());
+        return new ChatResponse(text);
     }
 }
