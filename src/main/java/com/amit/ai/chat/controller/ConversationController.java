@@ -50,16 +50,6 @@ public class ConversationController {
         return deleted ? ResponseEntity.noContent().build() : ResponseEntity.notFound().build();
     }
 
-    @PostMapping("/conversations/{id}/messages")
-    public ResponseEntity<ConversationDto> addMessage(@PathVariable String id, @Valid @RequestBody ChatRequest req) {
-        logger.debug("Adding message to conversation {}", id);
-        UserMessage message = UserMessage.userMessage(req.message());
-        return memoryService.addMessage(id, message)
-                .map(this::toDto)
-                .map(ResponseEntity::ok)
-                .orElseGet(() -> ResponseEntity.notFound().build());
-    }
-
     private ConversationDto toDto(Conversation conv) {
         List<MessageDto> msgs = conv.getMessages().stream()
                 .map(this::mapMessage)
