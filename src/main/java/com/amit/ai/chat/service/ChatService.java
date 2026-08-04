@@ -4,7 +4,9 @@ import com.amit.ai.chat.conversation.Conversation;
 import com.amit.ai.chat.conversation.ConversationMemoryService;
 import com.amit.ai.chat.model.ChatRequest;
 import com.amit.ai.chat.model.ChatResponse;
+import com.amit.ai.chat.prompt.PromptManager;
 import dev.langchain4j.data.message.ChatMessage;
+import dev.langchain4j.data.message.SystemMessage;
 import dev.langchain4j.data.message.UserMessage;
 import dev.langchain4j.model.chat.request.DefaultChatRequestParameters;
 import dev.langchain4j.model.googleai.GoogleAiGeminiChatModel;
@@ -14,6 +16,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -23,26 +26,27 @@ public class ChatService {
     private static final Logger logger = LoggerFactory.getLogger(ChatService.class);
 
     private final GoogleAiGeminiChatModel chatModel;
-
     private final ConversationMemoryService memoryService;
+    private final PromptManager promptManager;
 
     @Value("${langchain4j.google-ai-gemini.chat-model.model-name}")
     private String modelName;
 
     public ChatResponse chat(ChatRequest chatRequest) {
-
         logger.info("Calling chat model (model={}) with message length={}", modelName, chatRequest.message() == null ? 0 : chatRequest.message().length());
 
-        /*UserMessage userMessage = UserMessage.userMessage(chatRequest.message());
-
-        List<ChatMessage> messages = List.of(userMessage);*/
-
-        Conversation conversation = memoryService.getOrCreateConversation
-                (chatRequest.conversationId(), chatRequest.userId());
-
+        Conversation conversation = memoryService.getOrCreateConversation(chatRequest.conversationId(), chatRequest.userId());
         conversation.addMessage(UserMessage.userMessage(chatRequest.message()));
 
-        List<ChatMessage> messages = conversation.getMessages();
+        // Build message list: SystemMessage + Conversation History + Current UserMessage
+        List<ChatMessage> messages = new ArrayList<>();
+
+        // Add system prompt
+        String systemPromptText = promptManager.getSystemPrompt();
+        messages.add(SystemMessage.systemMessage(systemPromptText));
+
+        // Add conversation history
+        messages.addAll(conversation.getMessages());
 
         dev.langchain4j.model.chat.request.ChatRequest request =
                 dev.langchain4j.model.chat.request.ChatRequest.builder()
@@ -54,8 +58,7 @@ public class ChatService {
                         )
                         .build();
 
-        dev.langchain4j.model.chat.response.ChatResponse response =
-                chatModel.doChat(request);
+        dev.langchain4j.model.chat.response.ChatResponse response = chatModel.doChat(request);
 
         String text = response.aiMessage().text();
         logger.debug("Received response of length={}", text == null ? 0 : text.length());
