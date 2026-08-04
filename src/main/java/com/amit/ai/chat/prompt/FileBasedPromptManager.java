@@ -23,7 +23,7 @@ public class FileBasedPromptManager implements PromptManager {
 
     private final ResourceLoader resourceLoader;
     private final String promptsPath;
-    private final Map<String, String> cache = new ConcurrentHashMap<>();
+    private final Map<PromptType, String> cache = new ConcurrentHashMap<>();
 
     public FileBasedPromptManager(ResourceLoader resourceLoader, @Value("${app.prompts.path:classpath:prompts/}") String promptsPath) {
         this.resourceLoader = resourceLoader;
@@ -31,17 +31,18 @@ public class FileBasedPromptManager implements PromptManager {
     }
 
     @Override
-    public Optional<String> getPrompt(String name) {
-        if (name == null || name.isBlank()) return Optional.empty();
+    public Optional<String> getPrompt(PromptType type) {
+        if (type == null) return Optional.empty();
 
         // Check cache first
-        if (cache.containsKey(name)) {
-            return Optional.of(cache.get(name));
+        if (cache.containsKey(type)) {
+            return Optional.of(cache.get(type));
         }
 
         // Load from file
         try {
-            String filePath = promptsPath + name + ".txt";
+            String filename = type.getFilename();
+            String filePath = promptsPath + filename + ".txt";
             Resource resource = resourceLoader.getResource(filePath);
             if (!resource.exists()) {
                 logger.warn("Prompt file not found: {}", filePath);
@@ -49,32 +50,32 @@ public class FileBasedPromptManager implements PromptManager {
             }
 
             String content = new String(resource.getInputStream().readAllBytes(), StandardCharsets.UTF_8);
-            cache.put(name, content);
-            logger.debug("Loaded and cached prompt: {}", name);
+            cache.put(type, content);
+            logger.debug("Loaded and cached prompt: {}", type);
             return Optional.of(content);
         } catch (IOException e) {
-            logger.error("Error loading prompt: {}", name, e);
+            logger.error("Error loading prompt: {}", type, e);
             return Optional.empty();
         }
     }
 
     @Override
     public String getSystemPrompt() {
-        return getPrompt("system-prompt").orElse("You are a helpful assistant.");
+        return getPrompt(PromptType.SYSTEM).orElse("You are a helpful assistant.");
     }
 
     @Override
     public String getSummaryPrompt() {
-        return getPrompt("summary").orElse("Summarize the following text concisely.");
+        return getPrompt(PromptType.SUMMARIZER).orElse("Summarize the following text concisely.");
     }
 
     @Override
     public String getRagPrompt() {
-        return getPrompt("rag").orElse("Answer based on the provided context.");
+        return getPrompt(PromptType.RAG).orElse("Answer based on the provided context.");
     }
 
     @Override
     public String getInterviewPrompt() {
-        return getPrompt("interview").orElse("Conduct an interview.");
+        return getPrompt(PromptType.INTERVIEW).orElse("Conduct an interview.");
     }
 }
