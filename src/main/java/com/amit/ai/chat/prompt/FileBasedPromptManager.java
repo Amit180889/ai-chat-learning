@@ -60,7 +60,7 @@ public class FileBasedPromptManager implements PromptManager {
 
     @Override
     public String getSystemPrompt() {
-        return getPrompt("system").orElse("You are a helpful assistant.");
+        return getPrompt("system-prompt").orElse("You are a helpful assistant.");
     }
 
     @Override
